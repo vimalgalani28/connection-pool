@@ -39,11 +39,9 @@ class ConnectionPoolTest {
 
     /**
      * Test: getConnectionWhenConnectionPresentInQueueReturnsConnection
-     *
      * Purpose:
      * Ensures that when a connection is present in the queue (idle pool),
      * getConnection() returns it without creating a new one.
-     *
      * Expected:
      * - A non-null connection is returned
      * - Only 1 call to DriverManager.getConnection(...) is made
@@ -63,11 +61,9 @@ class ConnectionPoolTest {
 
     /**
      * Test: getConnectionWhenConnectionNotPresentInQueueReturnsNewConnection
-     *
      * Purpose:
      * Validates that if no idle connection is available, a new connection is created
      * until the max pool size is reached.
-     *
      * Expected:
      * - Second getConnection() creates a new connection
      * - DriverManager.getConnection(...) is called twice
@@ -88,11 +84,9 @@ class ConnectionPoolTest {
 
     /**
      * Test: getConnectionWhenConnectionPresentInQueueIsNotValidReturnsNewConnection
-     *
      * Purpose:
      * Simulates the case where an idle connection exists but is invalid (closed),
      * so a new connection should be created instead.
-     *
      * Expected:
      * - New connection is returned
      * - Total of 2 DriverManager.getConnection() calls: one for invalid, one new
@@ -120,11 +114,9 @@ class ConnectionPoolTest {
 
     /**
      * Test: getConnectionWhenMaxResourcesAreUtilisedThrowsEx
-     *
      * Purpose:
      * Verifies that once max pool size is reached, further getConnection() calls
      * throw an exception instead of blocking or returning null.
-     *
      * Expected:
      * - Third call to getConnection() throws RuntimeException
      * - Only 2 DriverManager.getConnection() calls made
@@ -146,11 +138,9 @@ class ConnectionPoolTest {
 
     /**
      * Test: getConnectionWhenResourcesAreReleasedWhileRetryReturnsConnection
-     *
      * Purpose:
      * Ensures that if all connections are in use, and one is released later,
      * a waiting request can acquire that released connection.
-     *
      * Expected:
      * - CompletableFuture blocks until releaseConnection() is called
      * - Connection queue is empty afterward
@@ -185,10 +175,8 @@ class ConnectionPoolTest {
 
     /**
      * Test: releaseConnectionAddsBackToQueue
-     *
      * Purpose:
      * Verifies that a connection released back to the pool is stored internally and reused on the next request.
-     *
      * Expected:
      * - The same connection object is reused (identity check via assertSame).
      * - DriverManager.getConnection(...) is called only once.
@@ -208,13 +196,10 @@ class ConnectionPoolTest {
 
     /**
      * Test: releaseConnectionWithNullDoesNothing
-     *
      * Purpose:
      * Ensures that calling releaseConnection(null) does not throw an exception or corrupt the pool state.
-     *
      * Execution:
      * - Call releaseConnection() with null.
-     *
      * Expected:
      * - No exception is thrown.
      * - Pool state remains unchanged.
@@ -224,5 +209,49 @@ class ConnectionPoolTest {
         connectionPool = new ConnectionPool("", "", "", 1, 2);
 
         Assertions.assertDoesNotThrow(() -> connectionPool.releaseConnection(null));
+    }
+
+    /**
+     * Test: releaseConnectionWithSameConnectionTwiceThrowsEx
+     * Purpose:
+     * Verifies that releasing the same connection twice results in an exception.
+     * This ensures that the pool tracks in-use connections and does not allow
+     * duplicate releases, which could lead to multiple instances of the same connection
+     * in the pool and unsafe concurrent usage.
+     * Expected:
+     * - RuntimeException is thrown on the second release attempt.
+     * - Exception is not null.
+     */
+    @Test
+    public void releaseConnectionWithSameConnectionTwiceThrowsEx() {
+        connectionPool = new ConnectionPool("", "", "", 1, 2);
+        Connection connection = connectionPool.getConnection();
+        connectionPool.releaseConnection(connection);
+
+        RuntimeException ex = Assertions.assertThrows(RuntimeException.class, () -> connectionPool.releaseConnection(connection));
+
+        Assertions.assertNotNull(ex);
+    }
+
+    /**
+     * Test: releaseConnectionWithSomeUnknownConnectionThrowsEx
+     * Purpose:
+     * Verifies that releasing a connection not created or tracked by the pool
+     * (i.e., an "unknown" connection) throws an exception.
+     * This guards against bugs where external or manually created connections are
+     * mistakenly returned to the pool, potentially leading to corruption or
+     * incorrect pool behavior.
+     * Expected:
+     * - RuntimeException is thrown because the connection is not recognized.
+     * - Exception is not null.
+     */
+    @Test
+    public void releaseConnectionWithSomeUnknownConnectionThrowsEx() {
+        connectionPool = new ConnectionPool("", "", "", 1, 2);
+        Connection connection = mock(Connection.class);
+
+        RuntimeException ex = Assertions.assertThrows(RuntimeException.class, () -> connectionPool.releaseConnection(connection));
+
+        Assertions.assertNotNull(ex);
     }
 } 
