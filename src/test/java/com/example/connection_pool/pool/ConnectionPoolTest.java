@@ -49,7 +49,7 @@ class ConnectionPoolTest {
     }
 
     @Test
-    public void getConnectionWhenMaxResourcesAreUtilisedReturnsThrowsEx() {
+    public void getConnectionWhenMaxResourcesAreUtilisedThrowsEx() {
         connectionPool = new ConnectionPool("", "", "", 1, 2);
         connectionPool.getConnection();
         connectionPool.getConnection();

@@ -1,5 +1,7 @@
 package com.example.connection_pool.pool;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.sql.Connection;
@@ -18,7 +20,10 @@ public class ConnectionPool {
     Queue<Connection> connectionQueue;
     private Integer connectionsPresent;
 
+    private static final Logger LOG = LoggerFactory.getLogger(ConnectionPool.class);
+
     public ConnectionPool(String url, String userName, String password, Integer minConnections, Integer maxConnections) {
+        LOG.info("Creating Connection Pool for url: {}", url);
         this.url = url;
         this.userName = userName;
         this.password = password;
