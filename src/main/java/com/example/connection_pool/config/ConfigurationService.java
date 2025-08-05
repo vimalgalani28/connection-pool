@@ -20,8 +20,8 @@ public class ConfigurationService {
             "jdbc:mysql://mysql:3306/testdb", // use Docker service name
             userName,
             password,
-            2,
-            5
+            1,
+            3
         );
     }
 }

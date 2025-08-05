@@ -254,4 +254,33 @@ class ConnectionPoolTest {
 
         Assertions.assertNotNull(ex);
     }
+
+    /**
+     * Test: initializePoolWithInvalidInputThrowsEx
+     *
+     * Purpose:
+     * Validates that the ConnectionPool constructor performs input validation and throws
+     * an IllegalStateException when provided with invalid or inconsistent input values.
+     *
+     * Scenarios Tested:
+     * - Null URL
+     * - Null username
+     * - Null password
+     * - Null minConnections
+     * - Null maxConnections
+     * - minConnections > maxConnections (logical inconsistency)
+     *
+     * Expected:
+     * - Each invalid input scenario should throw an IllegalStateException
+     * - Constructor should not allow invalid internal state or unbounded behavior
+     */
+    @Test
+    public void initializePoolWithInvalidInputThrowsEx() {
+        Assertions.assertThrows(IllegalStateException.class, () -> new ConnectionPool(null, "", "", 1, 2));
+        Assertions.assertThrows(IllegalStateException.class, () -> new ConnectionPool("", null, "", 1, 2));
+        Assertions.assertThrows(IllegalStateException.class, () -> new ConnectionPool("", "", null, 1, 2));
+        Assertions.assertThrows(IllegalStateException.class, () -> new ConnectionPool("", "", "", null, 2));
+        Assertions.assertThrows(IllegalStateException.class, () -> new ConnectionPool("", "", "", 1, null));
+        Assertions.assertThrows(IllegalStateException.class, () -> new ConnectionPool("", "", "", 2, 1));
+    }
 } 

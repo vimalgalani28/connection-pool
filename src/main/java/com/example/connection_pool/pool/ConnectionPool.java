@@ -40,6 +40,9 @@ public class ConnectionPool {
     private static final Logger LOG = LoggerFactory.getLogger(ConnectionPool.class);
 
     public ConnectionPool(String url, String userName, String password, Integer minConnections, Integer maxConnections) {
+        if (url == null || userName == null || password == null || minConnections == null || maxConnections == null || minConnections > maxConnections) {
+            throw new IllegalStateException("Invalid input to create connection pool");
+        }
         LOG.info("Creating Connection Pool for url: {}", url);
         this.url = url;
         this.userName = userName;
